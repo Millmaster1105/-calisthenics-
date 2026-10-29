@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="de">
+<head>
+<title>Calisthenics Rotation</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F171C" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Calisthenics">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one narrow phone column — sticky workout switcher, exercise cards with one big number field each, stretch checklist, history. */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --sunk:#E2E7EA; --fg:#14212B; --muted:#5B6B76; --line:#D3DADF;
+  --accent:#1E7A68; --accent-ink:#FFFFFF; --accent-soft:#D6EDE7; --hold:#8A5A12; --hold-soft:#F5E8D2; --danger:#A3352B;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F171C; --surface:#18232A; --sunk:#111B21; --fg:#E7EEF1; --muted:#93A4AE; --line:#2A3841;
+  --accent:#4FC2A8; --accent-ink:#06231C; --accent-soft:#173A33; --hold:#E3B567; --hold-soft:#3A2D16; --danger:#F08A7E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F171C; --surface:#18232A; --sunk:#111B21; --fg:#E7EEF1; --muted:#93A4AE; --line:#2A3841;
+  --accent:#4FC2A8; --accent-ink:#06231C; --accent-soft:#173A33; --hold:#E3B567; --hold-soft:#3A2D16; --danger:#F08A7E; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px;display:grid;gap:18px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase}
+.next{font-size:.9rem;color:var(--muted)}
+.next b{color:var(--accent);font-family:var(--display);font-size:1.15rem;letter-spacing:.03em}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 4px;font-family:var(--display);font-weight:700;font-size:1.5rem;line-height:1;cursor:pointer;display:grid;gap:3px;justify-items:center}
+.tab small{font-family:var(--body);font-weight:500;font-size:.68rem;color:var(--muted);letter-spacing:.02em}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab[aria-selected="true"] small{color:var(--accent-ink);opacity:.85}
+.tab .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.tab[aria-selected="true"] .dot{background:var(--accent-ink)}
+.focus{font-family:var(--display);font-weight:700;font-size:1.35rem;text-transform:uppercase;letter-spacing:.04em;margin:0;text-wrap:balance}
+.list{display:grid;gap:10px}
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+.ex.done{border-color:var(--accent)}
+.ex .name{font-weight:600;font-size:1rem;line-height:1.25;min-width:0}
+.ex .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.82rem;color:var(--muted)}
+.sets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.set{display:grid;gap:2px;justify-items:center}
+.set span{font-size:.68rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.set .num{width:100%}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.same{border:1px solid var(--line);background:var(--sunk);color:var(--fg);border-radius:999px;padding:4px 10px;font:inherit;font-size:.78rem;font-weight:600;cursor:pointer}
+.export{display:grid;gap:8px}
+.export textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,monospace;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px}
+.tag{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.tag.s{background:var(--hold-soft);color:var(--hold)}
+.target{font-variant-numeric:tabular-nums;color:var(--fg);font-weight:500}
+.entry{grid-column:2;grid-row:1 / span 2;display:flex;align-items:center;gap:4px}
+.step{width:38px;height:44px;border-radius:9px;border:1px solid var(--line);background:var(--sunk);color:var(--fg);font-size:1.3rem;font-weight:600;cursor:pointer;line-height:1}
+.num{width:64px;height:44px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);text-align:center;font-family:var(--display);font-weight:700;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.num:focus{outline:none;border-color:var(--accent)}
+.unit{font-size:.75rem;color:var(--muted);width:28px}
+.last{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.last b{color:var(--fg);font-weight:600}
+button:focus-visible,.num:focus-visible,input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.timer{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:10px 12px}
+.timer .t{font-family:var(--display);font-weight:800;font-size:2rem;font-variant-numeric:tabular-nums;min-width:4.2ch}
+.timer.run .t{color:var(--accent)}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:7px 12px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer}
+.sec-h{font-family:var(--display);font-weight:700;font-size:1.1rem;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 0;color:var(--muted)}
+.stretch{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 12px}
+.stretch label{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.stretch label:last-child{border-bottom:0}
+.stretch input{width:20px;height:20px;accent-color:var(--accent)}
+.stretch .hint{margin-left:auto;font-size:.8rem;color:var(--muted)}
+.save{width:100%;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:.05em;text-transform:uppercase;padding:14px;cursor:pointer}
+.save:disabled{opacity:.5;cursor:default}
+.status{font-size:.88rem;color:var(--muted);min-height:1.3em;text-align:center}
+.status.err{color:var(--danger)}
+.hist{display:grid;gap:8px}
+.h{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:4px}
+.h .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.h .w{font-family:var(--display);font-weight:800;font-size:1.25rem}
+.h .d{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.h .vals{font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.h .del{border:0;background:none;color:var(--muted);font:inherit;font-size:.8rem;text-decoration:underline;cursor:pointer;padding:0;justify-self:start}
+.h .del.confirm{color:var(--danger)}
+.empty{font-size:.9rem;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:14px}
+.note{font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.tab,.step,.chip,.save{transition:background-color .15s,border-color .15s}}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns label.chip{display:inline-flex;align-items:center}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Calisthenics</h1>
+    <div class="next" id="next">Nächstes Workout: <b>A</b></div>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <h2 class="focus" id="focus"></h2>
+
+  <div class="timer" id="timer">
+    <span class="t" id="tval">0:00</span>
+    <button class="chip" data-sec="60">60 s Pause</button>
+    <button class="chip" data-sec="90">90 s</button>
+    <button class="chip" data-sec="120">120 s</button>
+    <button class="chip" id="tstop" hidden>Stopp</button>
+  </div>
+
+  <section class="list" id="list" aria-label="Übungen"></section>
+
+  <h3 class="sec-h">Dehnen · je 30–60 s</h3>
+  <div class="stretch" id="stretch"></div>
+
+  <button class="save" id="save">Training speichern</button>
+  <div class="status" id="status" role="status"></div>
+
+  <h3 class="sec-h">Verlauf</h3>
+  <div class="hist" id="hist"><div class="empty">Noch keine Einheiten gespeichert. Trag pro Satz deine Wiederholungen oder Sekunden ein und tippe auf „Training speichern“.</div></div>
+  <h3 class="sec-h">Sichern &amp; Exportieren</h3>
+  <div class="export">
+    <div class="btns">
+      <button class="chip" id="exp">CSV für Excel</button>
+      <button class="chip" id="bak">Sicherung speichern</button>
+      <label class="chip" for="imp">Sicherung laden</label>
+      <input type="file" id="imp" accept=".json,application/json" hidden>
+    </div>
+    <p class="note" id="bakInfo">Deine Trainings liegen nur auf diesem Gerät. Speicher ab und zu eine Sicherung, zum Beispiel in iCloud Drive.</p>
+    <div id="expBox" hidden>
+      <p class="note">Speichern war hier nicht möglich. Kopier den Text und füg ihn in Excel oder Numbers ein.</p>
+      <textarea id="expText" readonly></textarea>
+      <button class="chip" id="expCopy">Text kopieren</button>
+    </div>
+  </div>
+  <p class="note">Pro Satz trägst du Wiederholungen (Wdh.) oder Sekunden (s) ein. Bei Übungen pro Bein oder Arm zählt die schwächere Seite. Leere Felder werden einfach nicht gespeichert.</p>
+</div>
+
+<script>
+const W = {
+  A:{short:"Handstand & Drücken", ex:[
+    ["Handstand (Wand oder frei)","5 × 20–30","s"],
+    ["Halber Handstand in halben Liegestütz (push & walk)","3 × 5","r"],
+    ["Pike Liegestütze","4 × 6–10","r"],
+    ["Klimmzüge","4 × max-2","r"],
+    ["Pistol Squats","3 × 5 pro Bein","r"],
+    ["Hollow Hold","3 × 20–40","s"],
+    ["Side Planks","2 × 30–45 pro Seite","s"]],
+    st:[["Handgelenke vor/zurück",""],["Brust an der Wand","pro Seite"],["Trizeps über Kopf","pro Seite"],["Hüftbeuger im Ausfallschritt","pro Seite"],["Kindhaltung",""]]},
+  B:{short:"Ziehen & Stange", ex:[
+    ["Crow","4 × 15–30","s"],
+    ["Klimmzüge","5 × max-2","r"],
+    ["Dips","4 × 8–12","r"],
+    ["Bar Hang einarmig","3 × 10–30 pro Arm","s"],
+    ["Klappmesser an der Stange","3 × 6–10","r"],
+    ["L-Hold an der Stange","4 × 10–20","s"],
+    ["Glute Bridge einbeinig","3 × 10 pro Bein","r"]],
+    st:[["Lat am Türrahmen oder an der Stange","pro Seite"],["Unterarmbeuger",""],["Kobra",""],["Brustdehnung",""],["Liegende Taube","pro Seite"]]},
+  C:{short:"Beine & Rücken", ex:[
+    ["Kopfstand","4 × 30–60","s"],
+    ["Pistol Squats","4 × 5–8 pro Bein","r"],
+    ["Lunge Slides","3 × 8–10 pro Bein","r"],
+    ["Liegestütze","4 × max-2","r"],
+    ["Klimmzüge (3 s runter)","3 × 4–6","r"],
+    ["Squats","2 × 20–25","r"],
+    ["Leg Lifts in Kerze","3 × 8–12","r"],
+    ["Superman","3 × 20–30","s"]],
+    st:[["Quadrizeps im Stehen","pro Seite"],["Vorbeuge im Sitzen",""],["Waden an der Wand","pro Seite"],["Tiefe Hocke halten",""],["Nacken zur Seite neigen","pro Seite"]]},
+  D:{short:"Rumpf & Kontrolle", ex:[
+    ["Handstand (Wand oder frei)","4 × 20–30","s"],
+    ["Liegestütz mit Knie an Ellenbogen","3 × 8–12","r"],
+    ["Klimmzüge","4 × max-2","r"],
+    ["Liegestütz Pike Slides","3 × 6–10","r"],
+    ["L-Slides / L-Hold im Stütz","4 × 10–20","s"],
+    ["Klappmesser am Boden","3 × 10–15","r"],
+    ["Schweizer","3 × 8–12","r"],
+    ["Raupe Hold","3 × 20–30","s"],
+    ["Plank Hold","2 × 45–60","s"],
+    ["Glute Bridge beidbeinig","2 × 15–20","r"]],
+    st:[["Pancake im Grätschsitz",""],["Schmetterling",""],["Drehsitz","pro Seite"],["Schulter quer vor der Brust","pro Seite"],["Handgelenke",""]]}
+};
+const ORDER=["A","B","C","D"];
+const $=s=>document.querySelector(s);
+const key=(w,i)=>w+"-"+i;
+
+let sessions=[];        // {id,w,ts,v:{key:number}}
+let cur=null;           // selected workout
+let draft={};           // {w:{key:val}}
+
+
+function lsOk(){try{localStorage.setItem("cal-t","1");localStorage.removeItem("cal-t");return true}catch(e){return false}}
+function ls(get,k,v){try{if(get)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+
+function nextWorkout(){
+  if(!sessions.length) return "A";
+  const last=sessions[0].w; return ORDER[(ORDER.indexOf(last)+1)%4];
+}
+const asArr=v=>v==null?null:Array.isArray(v)?v:[v];
+const nSets=t=>parseInt(t,10)||3;
+function lastFor(w,i){
+  for(const s of sessions){ const a=asArr(s.v&&s.v[key(w,i)]); if(a&&a.some(x=>x!=null)) return a }
+  return null;
+}
+const fmtSets=a=>a.map(x=>x==null?"–":x).join(" · ");
+function fmtDate(ts){return new Date(ts).toLocaleDateString("de-DE",{weekday:"short",day:"2-digit",month:"2-digit",year:"2-digit"})}
+
+function renderTabs(){
+  const nx=nextWorkout();
+  $("#next").innerHTML="Nächstes Workout: <b>"+nx+"</b>";
+  $("#tabs").innerHTML="";
+  ORDER.forEach(w=>{
+    const b=document.createElement("button");
+    b.className="tab";b.id="tab-"+w;b.setAttribute("role","tab");
+    b.setAttribute("aria-selected",w===cur?"true":"false");
+    b.innerHTML=w+'<small></small>'+(w===nx?'<span class="dot" title="Als Nächstes dran"></span>':'');
+    b.querySelector("small").textContent=W[w].short;
+    b.onclick=()=>{cur=w;renderAll()};
+    $("#tabs").appendChild(b);
+  });
+}
+function renderList(){
+  const w=cur, d=draft[w]||{};
+  $("#focus").textContent="Workout "+w+" · "+W[w].short;
+  const L=$("#list"); L.innerHTML="";
+  W[w].ex.forEach(([name,target,u],i)=>{
+    const k=key(w,i), last=lastFor(w,i), n=nSets(target);
+    const unit=u==="s"?"s":"Wdh.";
+    const el=document.createElement("div");
+    el.className="ex";
+    el.innerHTML=`<div class="name"></div>
+      <div class="meta"><span class="tag ${u==="s"?"s":""}">${u==="s"?"Sekunden":"Wdh."}</span><span class="target"></span></div>
+      <div class="sets"></div>
+      <div class="row"><div class="last"></div></div>`;
+    el.querySelector(".name").textContent=name;
+    el.querySelector(".target").textContent=u==="s"?target.replace(/( pro |$)/,s=>" s"+s):target;
+    el.querySelector(".last").innerHTML=last?`Letztes Mal: <b>${fmtSets(last)} ${unit}</b>`:"Noch kein Eintrag";
+    const box=el.querySelector(".sets"), inputs=[];
+    const cur_=()=>((draft[w]=draft[w]||{})[k]=draft[w][k]||Array(n).fill(null));
+    const refresh=()=>{const a=draft[w]?.[k];el.classList.toggle("done",!!a&&a.slice(0,n).every(x=>x!=null))};
+    for(let j=0;j<n;j++){
+      const c=document.createElement("label");c.className="set";
+      c.innerHTML=`<span>Satz ${j+1}</span><input class="num" id="in-${k}-${j}" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next">`;
+      const inp=c.querySelector("input");
+      inp.setAttribute("aria-label",name+", Satz "+(j+1)+", "+(u==="s"?"Sekunden":"Wiederholungen"));
+      if(last&&last[j]!=null) inp.placeholder=last[j];
+      const v=draft[w]?.[k]?.[j]; if(v!=null) inp.value=v;
+      inp.oninput=()=>{
+        const s=inp.value.replace(/\D/g,""); inp.value=s;
+        const a=cur_(); a[j]=s===""?null:Number(s);
+        if(a.every(x=>x==null)) delete draft[w][k];
+        ls(false,"cal-draft",draft); refresh();
+      };
+      inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();(inputs[j+1]||inp).focus()}};
+      inputs.push(inp); box.appendChild(c);
+    }
+    if(last){
+      const b=document.createElement("button");b.className="same";b.textContent="Wie letztes Mal";
+      b.onclick=()=>{const a=cur_();for(let j=0;j<n;j++){if(last[j]!=null){a[j]=last[j];inputs[j].value=last[j]}}ls(false,"cal-draft",draft);refresh()};
+      el.querySelector(".row").appendChild(b);
+    }
+    refresh();
+    L.appendChild(el);
+  });
+  const S=$("#stretch"); S.innerHTML="";
+  W[w].st.forEach(([n,h],i)=>{
+    const lab=document.createElement("label");
+    lab.innerHTML=`<input type="checkbox" id="st-${w}-${i}"><span></span><span class="hint"></span>`;
+    lab.querySelector("span").textContent=n; lab.querySelector(".hint").textContent=h;
+    S.appendChild(lab);
+  });
+}
+function renderHist(){
+  const H=$("#hist");
+  if(!sessions.length){H.innerHTML='<div class="empty">Noch keine Einheiten gespeichert. Trag pro Satz deine Wiederholungen oder Sekunden ein und tippe auf „Training speichern“.</div>';return}
+  H.innerHTML="";
+  sessions.slice(0,20).forEach(s=>{
+    const el=document.createElement("div");el.className="h";
+    const parts=W[s.w].ex.map(([n,,u],i)=>{const a=asArr(s.v[key(s.w,i)]);return a&&a.some(x=>x!=null)?n.split(" (")[0]+" "+a.map(x=>x??"–").join("/")+(u==="s"?" s":""):null}).filter(Boolean);
+    el.innerHTML=`<div class="top"><span class="w"></span><span class="d"></span></div><div class="vals"></div><button class="del">Löschen</button>`;
+    el.querySelector(".w").textContent="Workout "+s.w;
+    el.querySelector(".d").textContent=fmtDate(s.ts);
+    el.querySelector(".vals").textContent=parts.join(" · ")||"Keine Zahlen eingetragen";
+    const del=el.querySelector(".del");
+    del.onclick=async()=>{
+      if(!del.classList.contains("confirm")){del.classList.add("confirm");del.textContent="Wirklich löschen?";setTimeout(()=>{del.classList.remove("confirm");del.textContent="Löschen"},4000);return}
+      sessions=sessions.filter(x=>x.id!==s.id);
+      ls(false,"cal-sessions",sessions);
+      renderAll();
+    };
+    H.appendChild(el);
+  });
+}
+function renderAll(){renderTabs();renderList();renderHist()}
+
+$("#save").onclick=async()=>{
+  const w=cur, v={...(draft[w]||{})};
+  if(!Object.keys(v).length){status("Trag zuerst bei mindestens einer Übung eine Zahl ein.",true);return}
+  const s={id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),w,ts:Date.now(),v};
+  $("#save").disabled=true;
+  try{
+    sessions=[s,...sessions.filter(x=>x.id!==s.id)].sort((a,b)=>b.ts-a.ts);
+    if(!ls(false,"cal-sessions",sessions)&&!lsOk()) throw {code:"storage"};
+    delete draft[w]; ls(false,"cal-draft",draft);
+    cur=nextWorkout(); renderAll();
+    status("Workout "+w+" gespeichert. Als Nächstes: "+cur+".");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){status(e&&e.code==="storage"?"Speichern auf diesem Gerät ist blockiert. Ist der private Modus an?":"Speichern hat nicht geklappt. Versuch es gleich noch einmal.",true)}
+  $("#save").disabled=false;
+};
+/* Export als CSV (Semikolon, für deutsches Excel) */
+function buildCSV(){
+  const maxSets=Math.max(...ORDER.flatMap(w=>W[w].ex.map(e=>nSets(e[1]))));
+  const head=["Datum","Workout","Übung","Einheit"];for(let j=1;j<=maxSets;j++)head.push("Satz "+j);head.push("Summe");
+  const q=x=>{x=String(x??"");return /[;"\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x};
+  const rows=[head];
+  [...sessions].sort((a,b)=>a.ts-b.ts).forEach(s=>{
+    W[s.w].ex.forEach(([n,,u],i)=>{
+      const a=asArr(s.v[key(s.w,i)]); if(!a||!a.some(x=>x!=null)) return;
+      const r=[new Date(s.ts).toLocaleDateString("de-DE"),s.w,n,u==="s"?"Sekunden":"Wdh."];
+      for(let j=0;j<maxSets;j++) r.push(a[j]??"");
+      r.push(a.reduce((t,x)=>t+(x||0),0)); rows.push(r);
+    });
+  });
+  return "﻿"+rows.map(r=>r.map(q).join(";")).join("\r\n");
+}
+async function giveFile(text,filename,type){
+  const blob=new Blob([text],{type});
+  try{
+    const file=new File([blob],filename,{type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:filename});return true}
+  }catch(e){ if(e&&e.name==="AbortError") return "abort" }
+  try{
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);return true;
+  }catch(e){return false}
+}
+const today=()=>new Date().toISOString().slice(0,10);
+$("#exp").onclick=async()=>{
+  if(!sessions.length){status("Noch nichts zum Exportieren. Speicher zuerst ein Training.",true);return}
+  const r=await giveFile(buildCSV(),"calisthenics-verlauf-"+today()+".csv","text/csv;charset=utf-8");
+  if(r===true) status("CSV erstellt.");
+  else if(r!=="abort"){$("#expText").value=buildCSV().replace(/^﻿/,"");$("#expBox").hidden=false}
+};
+$("#bak").onclick=async()=>{
+  if(!sessions.length){status("Noch nichts zum Sichern.",true);return}
+  const data=JSON.stringify({app:"calisthenics",version:1,exported:new Date().toISOString(),sessions},null,1);
+  const r=await giveFile(data,"calisthenics-sicherung-"+today()+".json","application/json");
+  if(r===true){ls(false,"cal-lastbackup",Date.now());status("Sicherung erstellt.");renderBak()}
+};
+$("#imp").onchange=async()=>{
+  const f=$("#imp").files[0]; $("#imp").value=""; if(!f) return;
+  try{
+    const j=JSON.parse(await f.text());
+    const list=Array.isArray(j)?j:j.sessions;
+    if(!Array.isArray(list)) throw 0;
+    const ok=list.filter(s=>s&&s.id&&W[s.w]&&typeof s.ts==="number"&&s.v&&typeof s.v==="object");
+    const ids=new Set(sessions.map(s=>s.id)); let n=0;
+    ok.forEach(s=>{if(!ids.has(s.id)){sessions.push(s);n++}});
+    sessions.sort((a,b)=>b.ts-a.ts); ls(false,"cal-sessions",sessions);
+    cur=nextWorkout(); renderAll();
+    status(n?n+" Einheiten aus der Sicherung übernommen.":"Alle Einheiten aus der Sicherung waren schon da.");
+  }catch(e){status("Diese Datei ist keine Sicherung dieser App. Wähl eine Datei „calisthenics-sicherung-….json“.",true)}
+};
+function renderBak(){
+  const t=ls(true,"cal-lastbackup");
+  $("#bakInfo").textContent="Deine Trainings liegen nur auf diesem Gerät. "+(t?"Letzte Sicherung: "+new Date(t).toLocaleDateString("de-DE")+".":"Noch keine Sicherung gespeichert.")+" Leg sie am besten in iCloud Drive ab.";
+}
+$("#expCopy").onclick=()=>{const t=$("#expText");navigator.clipboard.writeText(t.value).then(()=>status("Text kopiert."),()=>{t.focus();t.select();status("Text markiert. Jetzt kopieren.")})};
+
+function status(t,err){const el=$("#status");el.textContent=t;el.classList.toggle("err",!!err)}
+
+/* Pausentimer */
+let tEnd=0,tInt=null,wake=null;
+function tick(){
+  const left=Math.max(0,Math.ceil((tEnd-Date.now())/1000));
+  $("#tval").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+  if(left<=0){stopT();$("#tval").textContent="Los!";try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}
+}
+function stopT(){clearInterval(tInt);tInt=null;$("#timer").classList.remove("run");$("#tstop").hidden=true;try{wake&&wake.release()}catch(e){}wake=null}
+document.querySelectorAll("#timer [data-sec]").forEach(b=>b.onclick=async()=>{
+  tEnd=Date.now()+Number(b.dataset.sec)*1000;clearInterval(tInt);tInt=setInterval(tick,250);tick();
+  $("#timer").classList.add("run");$("#tstop").hidden=false;
+  try{wake=await navigator.wakeLock?.request("screen")}catch(e){}
+});
+$("#tstop").onclick=()=>{stopT();$("#tval").textContent="0:00"};
+
+/* Start: lokal sofort, dann Konto-Speicher */
+draft=ls(true,"cal-draft")||{};
+sessions=(ls(true,"cal-sessions")||[]).sort((a,b)=>b.ts-a.ts);
+cur=nextWorkout(); renderAll();
+
+renderBak();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+</script>
+</body>
+</html>
